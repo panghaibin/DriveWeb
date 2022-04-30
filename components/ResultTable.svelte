@@ -1,5 +1,6 @@
 <script>
   import {download} from '../scripts/chunk_dl';
+  import localforage from "localforage";
 
   export let data;
   let filename = data.filename;
@@ -18,13 +19,38 @@
     }
   });
 
-  function download_file() {
-    let chunks = [];
-    blocks.forEach(async ({info: {url: u}}, i) => {
-      chunks[i] = await download(u)
-    })
 
-  }
+  let download_promises = [];
+  blocks.forEach(async ({info: {url: u}}, i) => {
+    download_promises.push(localforage.getItem(`${filename}_${i}`).then(blob => {
+      if (!blob) {
+        download(u).then(data => {
+          blob = new Blob([new Uint8Array(data)]);
+          localforage.setItem(`${filename}_${i}`, blob);
+        })
+      }
+    }))
+  })
+
+  let chunks = [];
+  let promises = [];
+  Promise.all(download_promises).then(() => {
+    blocks.forEach(async ({info: {url: u}}, i) => {
+      promises.push(localforage.getItem(`${filename}_${i}`).then(blob => {
+        chunks[i] = blob;
+      }));
+    })
+  }).then(() => {
+    Promise.all(promises).then(() => {
+      let blob = new Blob(chunks, {type: 'application/octet-stream'});
+      let url = URL.createObjectURL(blob);
+      let a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+    })
+  })
+
 </script>
 
 <style>

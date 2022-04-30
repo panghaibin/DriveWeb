@@ -1,5 +1,5 @@
-import { decode } from 'fast-png';
 import ResultTable from '../components/ResultTable.svelte';
+import {download} from "./chunk_dl";
 
 function dec_link(s) {
     let patt = /((bdex|bdrive):\/\/)?([a-fA-F0-9]{40})/;
@@ -28,27 +28,13 @@ export async function download_meta(meta) {
 
     const url = `https://i0.hdslb.com/bfs/album/${hash}.${ext}`;
     try {
-        const resp = await fetch(url, { referrer: '' });
-        const ab = await resp.arrayBuffer();
-        let data;
-        if (ext === 'png') {
-            let d = decode(ab).data.buffer;
-            let end = unpack(d.slice(0, 4));
-            data =  d.slice(4, 4 + end);
-        } else {
-            data = ab.slice(62);
-        }
+        const data = await download(url);
         const json_str = Buffer.from(data).toString('utf8');
         return JSON.parse(json_str);
     } catch (_) {
         return null;
     }
     
-    function unpack(ab) {
-        return new Uint8Array(ab)
-            .reverse()
-            .reduce((x, y) => (x<<8) + y)
-    }
 }
 
 export async function search() {

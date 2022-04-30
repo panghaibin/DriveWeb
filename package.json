@@ -7,7 +7,8 @@
     "build": "parcel build --dist-dir ./dist/release ./index.html"
   },
   "dependencies": {
-    "fast-png": "^5.0.2"
+    "fast-png": "^5.0.2",
+    "localforage": "^1.10.0"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.13.12",
