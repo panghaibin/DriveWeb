@@ -1,6 +1,5 @@
 <script>
-  import {download} from '../scripts/chunk_dl';
-  import localforage from "localforage";
+  import {download_block} from '../scripts/chunk_dl';
 
   export let data;
   let filename = data.filename;
@@ -19,37 +18,14 @@
     }
   });
 
-
-  let download_promises = [];
-  blocks.forEach(async ({info: {url: u}}, i) => {
-    download_promises.push(localforage.getItem(`${filename}_${i}`).then(blob => {
-      if (!blob) {
-        download(u).then(data => {
-          blob = new Blob([new Uint8Array(data)]);
-          localforage.setItem(`${filename}_${i}`, blob);
-        })
-      }
-    }))
-  })
-
-  let chunks = [];
-  let promises = [];
-  Promise.all(download_promises).then(() => {
-    blocks.forEach(async ({info: {url: u}}, i) => {
-      promises.push(localforage.getItem(`${filename}_${i}`).then(blob => {
-        chunks[i] = blob;
-      }));
-    })
-  }).then(() => {
-    Promise.all(promises).then(() => {
-      let blob = new Blob(chunks, {type: 'application/octet-stream'});
-      let url = URL.createObjectURL(blob);
-      let a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.click();
-    })
-  })
+  download_block(blocks, filename).then((chunks) => {
+    let full_blob = new Blob(chunks, {type: 'application/octet-stream'});
+    let url = URL.createObjectURL(full_blob);
+    let a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+  });
 
 </script>
 
