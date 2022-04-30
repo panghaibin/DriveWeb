@@ -1,28 +1,30 @@
 <script>
-    import download from '../scripts/chunk_dl';
+  import {download} from '../scripts/chunk_dl';
 
-    export let data;
-    let filename = data.filename;
-    let filesize = data.size;
-    let hash = data.sha1;
+  export let data;
+  let filename = data.filename;
+  let filesize = data.size;
+  let hash = data.sha1;
 
-    let blocks = data.block
-        .map((v, i) =>{ return {info: v, id: i} });
-
-    blocks.forEach(e => {
-        let url = e.info.url;
-        if (/^http\:\/\//i.test(url)) {
-            e.info.url = url.replace(/^http/i, 'https');
-        }
+  let blocks = data.block
+    .map((v, i) => {
+      return {info: v, id: i}
     });
 
-    function download_file() {
-        let chunks = [];
-        blocks.forEach(async({info: {url: u}}, i) => {
-            chunks[i] = await download(u)
-        })
-        return 
+  blocks.forEach(e => {
+    let url = e.info.url;
+    if (/^http\:\/\//i.test(url)) {
+      e.info.url = url.replace(/^http/i, 'https');
     }
+  });
+
+  function download_file() {
+    let chunks = [];
+    blocks.forEach(async ({info: {url: u}}, i) => {
+      chunks[i] = await download(u)
+    })
+
+  }
 </script>
 
 <style>
@@ -35,28 +37,28 @@
 <table align="left" style="width: 100%; border: double 3px;">
     <th id="table-header" colspan="3">Result</th>
     <tbody id="results-body" board="1">
+    <tr>
+        <td id="filename" align="left" colspan="3">
+            <p>Filename: {filename}</p>
+        </td>
+    </tr>
+    <tr>
+        <td id="filesize" align="left" colspan="3">
+            <p>Filesize: {filesize} / Hash: {hash}</p>
+        </td>
+    </tr>
+
+    {#each blocks as block (block.id)}
         <tr>
-            <td id="filename" align="left" colspan="3">
-                <p>Filename: {filename}</p>
+            <td>{block.id}</td>
+            <td>
+                <details>
+                    URL: {block.info.url} <br/>
+                    Hash: {block.info.sha1}
+                </details>
             </td>
+            <td>{block.info.size}</td>
         </tr>
-        <tr>
-            <td id="filesize" align="left" colspan="3">
-                <p>Filesize: {filesize} / Hash: {hash}</p>
-            </td>
-        </tr>
-            
-        {#each blocks as block (block.id)}
-            <tr>
-                <td>{block.id}</td>
-                <td>
-                    <details>
-                        URL: {block.info.url} <br/>
-                        Hash: {block.info.sha1}
-                    </details>
-                </td>
-                <td>{block.info.size}</td>
-            </tr>
-        {/each}
+    {/each}
     </tbody>
 </table>
